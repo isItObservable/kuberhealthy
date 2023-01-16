@@ -1,0 +1,3 @@
+scheme: http
+endpoint: tracetest.34.159.9.29.nip.io
+analyticsEnabled: true
