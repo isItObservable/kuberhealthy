@@ -18,21 +18,9 @@ import random
 import uuid
 from locust import HttpUser, task, between
 from kh_client import *
-from opentelemetry import context, baggage, trace
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from opentelemetry.instrumentation.requests import RequestsInstrumentor
-from opentelemetry.instrumentation.urllib3 import URLLib3Instrumentor
 
-tracer_provider = TracerProvider()
-trace.set_tracer_provider(tracer_provider)
-tracer_provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))
 
-# Instrumenting manually to avoid error with locust gevent monkey
-RequestsInstrumentor().instrument()
-URLLib3Instrumentor().instrument()
-# get the environment vairaible for kuberhealthy
+
 
 categories = [
     "binoculars",
@@ -221,7 +209,7 @@ class WebsiteUser(HttpUser):
     @task(10)
     def browse_product(self):
         response = self.client.get("/api/products/" + random.choice(products))
-         if response.status_code != 200:
+        if response.status_code != 200:
             report_failure(["/products not responding as expected"])
 
     @task(3)
@@ -230,7 +218,7 @@ class WebsiteUser(HttpUser):
             "productIds": [random.choice(products)],
         }
         response = self.client.get("/api/recommendations/", params=params)
-        if response.status_code != 200 || response.status_code != 308:
+        if response.status_code != 200 or response.status_code != 308:
             report_failure(["/recommendations not responding as expected"])
 
     @task(3)
@@ -292,8 +280,6 @@ class WebsiteUser(HttpUser):
             report_failure(["checkout not responding as expected"])
 
     def on_start(self):
-        ctx = baggage.set_baggage("synthetic_request", "true")
-        context.attach(ctx)
         self.index()
 
     def on_stop(self):

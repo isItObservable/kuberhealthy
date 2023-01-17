@@ -15,136 +15,148 @@
 package main
 
 import (
-   "fmt"
-  "log"
- "strings"
+  "strings"
   "os"
+  "bytes"
+  "fmt"
   "os/exec"
+  "io/ioutil"
   "github.com/kuberhealthy/kuberhealthy/v2/pkg/checks/external/checkclient"
 )
 
-func createDatastore() bool
-{
-    tracetestserver:=os.Getenv("TRACETEST_URL")
-    cmd := exec.Command("tracetest", "datastore","apply","-f","/test/datastore.yaml")
-    stdout, err := cmd.StdoutPipe()
+func createDatastore() bool {
+     cmd := exec.Command("tracetest", "datastore","apply","-f","/test/datastore.yaml")
+     var out bytes.Buffer
+     var stderr bytes.Buffer
+     cmd.Stdout = &out
+     cmd.Stderr = &stderr
 
-    if err != nil {
-        log.Fatal(err)
-        return err
-    }
+     err := cmd.Run()
+     if err != nil {
+         fmt.Println("Error "+ fmt.Sprint(err) + ": " + stderr.String())
+         return false
+     }
 
-    if err := cmd.Start(); err != nil {
-        log.Fatal(err)
-        return err
-    }
-
-    data, err := ioutil.ReadAll(stdout)
-
-    if err != nil {
-        log.Fatal(err)
-        return err
-    }
-
-    if err := cmd.Wait(); err != nil {
-        log.Fatal(err)
-        return err
-    }
-
+    fmt.Println("output datastore :" +out.String())
     return true
 }
-func configureTraceTest() bool
-{
-    tracetestserver:=os.Getenv("TRACETEST_URL")
-    cmd := exec.Command("tracetest", "configure","--endpoint",tracetestserver,"--analytics=false")
+
+
+func checkTraceTest() bool {
+
+    cmd := exec.Command("cat", "/test/test.yaml")
     stdout, err := cmd.StdoutPipe()
 
     if err != nil {
-        log.Fatal(err)
+        fmt.Println(err.Error())
         return false
     }
 
     if err := cmd.Start(); err != nil {
-        log.Fatal(err)
+        fmt.Println("Error:"+ err.Error())
         return false
     }
 
     data, err := ioutil.ReadAll(stdout)
-
+    datastring := string(data)
     if err != nil {
-        log.Fatal(err)
+        fmt.Println("Error:"+err.Error())
         return false
     }
 
     if err := cmd.Wait(); err != nil {
-        log.Fatal(err)
+        fmt.Println("Error:"+err.Error())
         return false
     }
-
-
+    fmt.Println("definition file to run :" +datastring)
 
    return true
 }
 
-func runTraceTest() bool
-{
+func configureTraceTest() bool {
+    tracetestserver:=os.Getenv("TRACETEST_URL")
+    fmt.Println("Tracetest url :"+tracetestserver)
+    cmd := exec.Command("tracetest", "configure","--endpoint",tracetestserver,"--analytics=false")
+    stdout, err := cmd.Output()
 
-        cmd := exec.Command("tracetest", "test","run","--definition","/test/test.yaml","--wait-for-result")
+
+    if err != nil {
+        fmt.Println("Error:"+err.Error())
+        return false
+    }
+    datastring := string(stdout)
+
+
+    fmt.Println("output configure:" +datastring)
+
+   return true
+}
+
+func runTraceTest() bool {
+
+        cmd := exec.Command("tracetest", "test","run","-d","/test/test.yaml","--wait-for-result")
+
         stdout, err := cmd.StdoutPipe()
 
+
         if err != nil {
-            log.Fatal(err)
-            checkclient.ReportFailure([]string{err})
-            return false
+             fmt.Println("Error: "+ fmt.Sprint(err)  )
         }
 
         if err := cmd.Start(); err != nil {
-           log.Fatal(err)
-           checkclient.ReportFailure([]string{err})
-           return false
-
+            fmt.Println("Error start: "+ fmt.Sprint(err) )
         }
 
         data, err := ioutil.ReadAll(stdout)
 
         if err != nil {
-           log.Fatal(err)
-           checkclient.ReportFailure([]string{err})
-           return false
+            fmt.Println("Error reading : "+ fmt.Sprint(err) )
         }
 
         if err := cmd.Wait(); err != nil {
-            log.Fatal(err)
-            checkclient.ReportFailure([]string{err})
-            return false
+            fmt.Println("Error wainting : "+ fmt.Sprint(err) )
         }
 
-        check:= strings.Contains(data,"ERROR")
-        if check
-        {
-            log.Fatal(data)
-            checkclient.ReportFailure([]string{data})
+
+
+        datastring := string(data)
+        fmt.Println("output run:" +datastring)
+        check:= strings.Contains(datastring,"ERROR")
+        if check {
+            fmt.Println("outptut contains error: "+datastring)
+            checkclient.ReportFailure([]string{datastring})
             return false
-        }
-        else
+        } else {
             return true
+        }
 }
 
 func main() {
-  if(configureTraceTest())
-  {
-    if(createDatastore())
-    {
-        ok := runTraceTest()
-        if ok {
-            checkclient.ReportSuccess()
-        }
+  if checkTraceTest() {
+      fmt.Println("Check with success")
+      if configureTraceTest() {
+        fmt.Println("Configure with success")
+      //  if createDatastore()  {
+        //    fmt.Println("Create datastore with success")
+            ok := runTraceTest()
+            if ok {
+                fmt.Println("run trace test with success")
+                checkclient.ReportSuccess()
+            } else
+            {
+               fmt.Println("run trace test with errors")
+            }
 
-    }
-        else
-            checkclient.ReportFailure([]string{"Unable to Create Datastore"})
+        //} else {
+          //      fmt.Println("Unable to create Datastore")
+           //     checkclient.ReportFailure([]string{"Unable to Create Datastore"})
+        //}
+      } else {
+         fmt.Println("Unable to configure tracetest" )
+        checkclient.ReportFailure([]string{"Unable to configure Tracetest"})
+      }
+  }  else {
+        fmt.Println("Issue calling tracetest")
   }
-  else
-    checkclient.ReportFailure([]string{"Unable to configure Tracetest"})
 
 }

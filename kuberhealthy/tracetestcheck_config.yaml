@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tracetest-config
+data:
+  test.yaml: |-
+    type: Test
+    spec:
+      id: aOvr7Ro4R
+      name: oteldemo_listproducts
+      description: "OpenTelemetry Demo - List Products"
+      trigger:
+        type: http
+        httpRequest:
+          url: http://example-frontend.otel-demo.svc:8080/api/products
+          method: GET
+          headers:
+          - key: Content-Type
+            value: application/json
+      specs:
+        - selector: span[tracetest.span.type="rpc" name="hipstershop.ProductCatalogService/ListProducts"]
+          assertions:
+            - attr:rpc.grpc.status_code = 0
+        - selector: span[tracetest.span.type="rpc" name="hipstershop.ProductCatalogService/ListProducts"
+            rpc.system="grpc" rpc.method="ListProducts" rpc.service="hipstershop.ProductCatalogService"]
+          assertions:
+            - attr:rpc.grpc.status_code = 0
+        - selector: span[tracetest.span.type="general" name="Tracetest trigger"]
+          assertions:
+            - attr:tracetest.response.status  =  200
+            - attr:tracetest.span.duration < 50ms
+  datastore.yaml: |-
+      type: DataStore
+      spec:
+        name: Opentelemetry Collector pipeline
+        type: otlp
+        isDefault: true

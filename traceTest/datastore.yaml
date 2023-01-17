@@ -1,5 +1,6 @@
 type: DataStore
 spec:
+  id: nF4rpiT4g
   name: Opentelemetry Collector pipeline
   type: otlp
   isDefault: true

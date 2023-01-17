@@ -5,11 +5,33 @@ metadata:
 spec:
   runInterval: 30s # The interval that Kuberhealthy will run your check on
   timeout: 2m # After this much time, Kuberhealthy will kill your check and consider it "failed"
+  extraLabels:
+    app.kubernetes.io/name: example
+    app.kubernetes.io/instance: example
+    app.kubernetes.io/component: loadgeneratorcheck
   podSpec: # The exact pod spec that will run.  All normal pod spec is valid here.
     containers:
       - env: # Environment variables are optional but a recommended way to configure check behavior
-          - name: MY_OPTION_ENV_VAR
-            value: "option_setting_here"
-        image: quay.io/comcast/test-check:latest # The image of the check you just pushed
+          - name: FRONTEND_ADDR
+            value: 'example-frontend:8080'
+          - name: LOCUST_WEB_PORT
+            value: "8089"
+          - name: LOCUST_USERS
+            value: "1"
+          - name: LOCUST_SPAWN_RATE
+            value: "1"
+          - name: LOCUST_RUN_TIME
+            value: 5m
+          - name: LOCUST_HOST
+            value: http://$(FRONTEND_ADDR)
+          - name: LOCUST_HEADLESS
+            value: "false"
+          - name: LOCUST_AUTOSTART
+            value: "true"
+          - name: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
+            value: python
+          - name: LOADGENERATOR_PORT
+            value: "8089"
+        image: hrexed/oteldemo:v1.2.1-loadgenerator-kuberhealthy # The image of the check you just pushed
         imagePullPolicy: Always # During check development, it helps to set this to 'Always' to prevent on-node image caching.
-        name: main
+        name: loadgeneratorcheck
