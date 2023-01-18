@@ -106,6 +106,8 @@ kubectl apply -f kubernetes-manifests/rbac.yaml
 ##update the collector pipeline
 sed -i "s,DT_TOKEN_TO_REPLACE,$DTTOKEN," kubernetes-manifests/openTelemetry-manifest.yaml
 sed -i "s,DT_URL_TO_REPLACE,$DTURL," kubernetes-manifests/openTelemetry-manifest.yaml
+sed -i "s,DT_TOKEN_TO_REPLACE,$DTTOKEN," kubernetes-manifests/openTelemetry-manifest_prometheus.yaml
+sed -i "s,DT_URL_TO_REPLACE,$DTURL," kubernetes-manifests/openTelemetry-manifest_prometheus.yaml
 ##Deploy the Collector DaemonSet
 kubectl apply -f kubernetes-manifests/openTelemetry-manifest.yaml
 
@@ -129,7 +131,7 @@ echo "--------------Demo--------------------"
 echo "url of the demo: "
 echo "Otel demo url: http://otel-demo.$IP.nip.io"
 echo "--------------Pyroscope--------------------"
-echo "pyroscope url: http://tracetest.$IP.nip.io"
+echo "tracetest url: http://tracetest.$IP.nip.io"
 echo "========================================================"
 
 

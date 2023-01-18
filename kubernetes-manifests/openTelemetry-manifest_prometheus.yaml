@@ -24,8 +24,13 @@ spec:
         protocols:
           grpc:
             endpoint: "localhost:65535"
-
-
+      prometheus:
+        config:
+          scrape_configs:
+            - job_name: 'kubernetes-kuberhealty'
+              scrape_interval: 5s
+              static_configs:
+              - targets: ['kuberhealthy.kubehealthy.svc:80']
     processors:
       batch:
         send_batch_max_size: 1000
@@ -95,7 +100,7 @@ spec:
           processors: [memory_limiter,k8sattributes,spanmetrics,batch]
           exporters: [otlphttp]
         metrics:
-          receivers: [otlp]
+          receivers: [otlp,prometheus]
           processors: [memory_limiter,k8sattributes,batch]
           exporters: [otlphttp]
         metrics/spanmetrics:
