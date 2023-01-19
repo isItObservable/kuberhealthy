@@ -90,6 +90,7 @@ kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.6
 # Wait for pod webhook started
 kubectl wait pod -l app.kubernetes.io/component=webhook -n cert-manager --for=condition=Ready --timeout=2m
 # Deploy the opentelemetry operator
+sleep 10
 echo "Deploying the OpenTelemetry Operator"
 kubectl apply -f https://github.com/open-telemetry/opentelemetry-operator/releases/latest/download/opentelemetry-operator.yaml
 
@@ -126,6 +127,11 @@ helm repo add kubeshop https://kubeshop.github.io/helm-charts
 helm repo update
 helm install tracetest kubeshop/tracetest --set telemetry.dataStores.otlp.type="otlp" --set telemetry.exporters.collector.exporter.collector.endpoint="oteld-collector.default.svc.cluster.local:4317" --set server.telemetry.dataStore="otlp" -n tracetest --set ingress.enabled=true --set ingress.className=nginx --set "ingress.hosts[0].host=tracetest.$IP.nip.io,ingress.hosts[0].paths[0].path=/,ingress.hosts[0].paths[0].pathType=ImplementationSpecific"
 
+
+#DEploying otel demo application
+kubectl create ns otel-demo
+kubectl apply -f kubernetes-manifests/openTelemetry-sidecar.yaml -n otel-demo
+kubectl apply -f kubernetes-manifests/openTelemetry-manifest.yaml -n otel-demo
 # Echo environ*
 echo "--------------Demo--------------------"
 echo "url of the demo: "
