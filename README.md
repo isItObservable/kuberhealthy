@@ -123,7 +123,7 @@ prometheus:
     - job_name: 'kubernetes-kuberhealty'
       scrape_interval: 5s
       static_configs:
-      - targets: ['kuberhealthy.kubehealthy.svc:80']
+      - targets: ['kuberhealthy.kuberhealthy.svc:80']
 ```
 apply the modified collector :
 ```shell

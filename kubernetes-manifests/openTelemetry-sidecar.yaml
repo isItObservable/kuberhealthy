@@ -36,10 +36,10 @@ spec:
            operations:
              - action: add_label
                new_label:  k8s.cluster.name
-               new_value: CLUSTER_NAME_TO_REPLACE
+               new_value: isitobs-kuberhealthy
              - action: add_label
                new_label: dt.kubernetes.config.id
-               new_value: CLUSTER_ID_TOREPLACE
+               new_value: dced91b2-a603-49cf-8c2f-05213fcb5f20
              - action: update_label
                label: system_uuid
                new_label: dt.kubernetes.node.system_uuid
